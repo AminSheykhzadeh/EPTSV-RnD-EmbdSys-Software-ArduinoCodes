@@ -1,5 +1,4 @@
 #include <Arduino.h>
-
 #include <DFRobot_BMX160.h>
 
 DFRobot_BMX160 bmx160;
