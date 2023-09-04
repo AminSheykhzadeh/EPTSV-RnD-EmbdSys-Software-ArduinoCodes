@@ -1,8 +1,17 @@
+// arduino inc
 #include <Arduino.h>
+#include <SPI.h>
+// IMU inc
 #include <DFRobot_BMX160.h>
+// MAX30003 inc
+#include <protocentral_Max30003.h>
+#include "protocentral_Max30003.h"
+
 
 DFRobot_BMX160 bmx160;
+MAX30003 max30003;
 sBmx160SensorData_t Omagn, Ogyro, Oaccel;
+
 
 // functions
 void PrintIMUData_f(void);
@@ -11,13 +20,14 @@ void setup(){
   Serial.begin(115200);
   delay(100);
   Serial.println("");Serial.println("HI:)");
+
   //init the hardware bmx160  
+  Serial.println("Initializing IMU");
   if (bmx160.begin() != true){
     Serial.println("init false");
     while(1);
   }
-  Serial.println("init success");
-
+  
   //bmx160.setLowPower();   //disable the gyroscope and accelerometer sensor
   //bmx160.wakeUp();        //enable the gyroscope and accelerometer sensor
   //bmx160.softReset();     //reset the sensor
@@ -40,12 +50,49 @@ void setup(){
    *       }eAccelRange_t;
    */
   //bmx160.setAccelRange(eAccelRange_4G);
+  Serial.println("IMU init success");
   delay(100);
+
+    
+
+  //init the hardware MAX30003
+    Serial.println("Initializing MAX30003");
+    pinMode(MAX30003_CS_PIN,OUTPUT);
+    digitalWrite(MAX30003_CS_PIN,HIGH); //disable device
+
+    SPI.begin();
+    //SPI.setBitOrder(MSBFIRST);
+    //SPI.setDataMode(SPI_MODE0);
+    bool ret = max30003.max30003ReadInfo();
+    delay(1500);
+    ret = max30003.max30003ReadInfo();
+    ret = 0;
+    ret = max30003.max30003ReadInfo();
+    if(ret){
+      Serial.println("Max30003 read ID Success");
+    }else{
+
+      while(!ret){
+        //stay here untill the issue is fixed.
+        ret = max30003.max30003ReadInfo();
+        Serial.println("Failed to read ID, please make sure all the pins are connected");
+        delay(300);
+      }
+    }
+
+    Serial.println("Initialising the chip ...");
+    delay(6000);
+    max30003.max30003Begin();   // initialize MAX30003
+
 }
 
 void loop(){
-  PrintIMUData_f();
-  delay(500);
+    max30003.getEcgSamples();   //It reads the ecg sample and stores it to max30003.ecgdata .
+    Serial.println(max30003.ecgdata);
+    delay(8);
+
+  // PrintIMUData_f();
+  // delay(500);
 }
 
 
